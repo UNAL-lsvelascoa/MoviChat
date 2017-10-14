@@ -10,4 +10,8 @@
     <string name="write_something">Escribe algo...</string>
     <string name="sended_bug">Tu reporte ha sido enviado</string>
     <string name="describe_bug">Describe con detalle el bug.</string>
+
+
+    <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
+
 </resources>

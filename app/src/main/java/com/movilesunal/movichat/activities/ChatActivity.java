@@ -2,11 +2,11 @@ package com.movilesunal.movichat.activities;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.view.Menu;
@@ -24,12 +24,13 @@ import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.movilesunal.movichat.R;
 import com.movilesunal.movichat.model.Message;
 
-import java.sql.Time;
 import java.util.Calendar;
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -37,6 +38,7 @@ public class ChatActivity extends AppCompatActivity {
     private NestedScrollView sclMessages;
     private FirebaseUser user;
     private LinkedList<String> sending = new LinkedList<>();
+    private AtomicInteger msgId = new AtomicInteger();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +110,8 @@ public class ChatActivity extends AppCompatActivity {
                 }
             }
         });
+
+        FirebaseMessaging.getInstance().subscribeToTopic("MoviChat");
     }
 
     @Override
@@ -180,5 +184,11 @@ public class ChatActivity extends AppCompatActivity {
         String key = FirebaseDatabase.getInstance().getReference().child("Room").push().getKey();
         sending.add(key);
         FirebaseDatabase.getInstance().getReference().child("Room").child(key).setValue(message);
+        /*String SENDERID = FirebaseInstanceId.getInstance().getToken();
+        RemoteMessage rm = new RemoteMessage.Builder("/topics/MoviChat")
+                .setMessageId("0:125676897843176471")
+                .addData("message", "Hello World")
+                .build();
+        FirebaseMessaging.getInstance().send(rm);*/
     }
 }
