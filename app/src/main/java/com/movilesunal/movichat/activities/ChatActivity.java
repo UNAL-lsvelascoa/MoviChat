@@ -49,8 +49,8 @@ public class ChatActivity extends AppCompatActivity {
     private FirebaseUser user;
     private LinkedList<String> sending = new LinkedList<>();
     private AtomicInteger msgId = new AtomicInteger();
-    private StorageReference reference;
     private GoogleApiClient mGoogleApiClient;
+    private String uidLastMessage = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,6 +157,7 @@ public class ChatActivity extends AppCompatActivity {
                     FirebaseAuth.getInstance().signOut();
 
                     Auth.GoogleSignInApi.signOut(mGoogleApiClient);
+                    mGoogleApiClient.disconnect();
                     finish();
                     startActivity(new Intent(this, LoginActivity.class));
                 } else {
@@ -198,7 +199,11 @@ public class ChatActivity extends AppCompatActivity {
             view = getLayoutInflater().inflate(R.layout.own_message, lytMessages, false);
         } else {
             view = getLayoutInflater().inflate(R.layout.other_message, lytMessages, false);
-            downloadImage(((ImageView) view.findViewById(R.id.imgUser)), "Users/" + message.getUid());
+            if (!uidLastMessage.equals(message.getUid())) {
+                downloadImage(((ImageView) view.findViewById(R.id.imgUser)), "Users/" + message.getUid());
+            } else {
+                ((ImageView) view.findViewById(R.id.imgUser)).setImageDrawable(null);
+            }
         }
         TextView txtUser = (TextView) view.findViewById(R.id.txtUser);
         TextView txtText = (TextView) view.findViewById(R.id.txtText);
@@ -208,6 +213,7 @@ public class ChatActivity extends AppCompatActivity {
         txtHour.setText(message.getHour());
 
         lytMessages.addView(view);
+        uidLastMessage = message.getUid();
         sclMessages.post(new Runnable() {
             @Override
             public void run() {
@@ -223,8 +229,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     public void downloadImage(ImageView img, String path) {
-        reference = FirebaseStorage.getInstance().getReference();
-        StorageReference ref = reference;
+        StorageReference ref = FirebaseStorage.getInstance().getReference();
         ref = ref.child(path);
         Glide.with(this)
                 .using(new FirebaseImageLoader())

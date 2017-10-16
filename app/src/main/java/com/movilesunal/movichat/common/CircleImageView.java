@@ -37,24 +37,18 @@ public class CircleImageView extends android.support.v7.widget.AppCompatImageVie
 
         Drawable drawable = getDrawable();
 
-        if (drawable == null) {
+        if (drawable == null || getWidth() == 0 || getHeight() == 0) {
             return;
         }
 
-        if (getWidth() == 0 || getHeight() == 0) {
-            return;
-        }
-        Bitmap b = null;
-        if (drawable instanceof GlideBitmapDrawable) {
-            b = ((GlideBitmapDrawable) drawable).getBitmap();
+        Bitmap bitmap = null;
+        if (drawable instanceof BitmapDrawable) {
+            bitmap = ((BitmapDrawable) drawable).getBitmap();
         } else {
-            b = ((BitmapDrawable) drawable).getBitmap();
+            bitmap = ((GlideBitmapDrawable) drawable.getCurrent()).getBitmap().copy(Bitmap.Config.ARGB_8888, true);
         }
-        Bitmap bitmap = b.copy(Bitmap.Config.ARGB_8888, true);
 
-        int w = getWidth(), h = getHeight();
-
-        Bitmap roundBitmap = getCroppedBitmap(bitmap, w);
+        Bitmap roundBitmap = getCroppedBitmap(bitmap, getWidth());
         canvas.drawBitmap(roundBitmap, 0, 0, null);
 
     }

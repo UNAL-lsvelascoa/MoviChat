@@ -66,7 +66,8 @@ public class LoginActivity extends AppCompatActivity {
                                         @Override
                                         public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
                                             Snackbar.make(getCurrentFocus(),
-                                                    R.string.cannot_connect_api_google, Snackbar.LENGTH_LONG).show();
+                                                    R.string.cannot_connect_api_google,
+                                                    Snackbar.LENGTH_LONG).show();
                                         }
                                     })
                             .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
@@ -99,7 +100,8 @@ public class LoginActivity extends AppCompatActivity {
                     GoogleSignInAccount account = result.getSignInAccount();
                     firebaseAuthWithGoogle(account);
                 } else {
-                    Snackbar.make(getCurrentFocus(), R.string.google_auth_fail, Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(getCurrentFocus(), R.string.google_auth_fail,
+                            Snackbar.LENGTH_LONG).show();
                 }
                 break;
         }
@@ -118,10 +120,12 @@ public class LoginActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             saveImage("Users/" + FirebaseAuth.getInstance().getCurrentUser().getUid());
+                            mGoogleApiClient.disconnect();
                             finish();
                             startActivity(new Intent(LoginActivity.this, ChatActivity.class));
                         } else {
-                            Snackbar.make(getCurrentFocus(), R.string.firebase_auth_fail, Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(getCurrentFocus(), R.string.firebase_auth_fail,
+                                    Snackbar.LENGTH_LONG).show();
                         }
                     }
                 });
