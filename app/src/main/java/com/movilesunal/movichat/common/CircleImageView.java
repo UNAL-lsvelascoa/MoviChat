@@ -50,7 +50,6 @@ public class CircleImageView extends android.support.v7.widget.AppCompatImageVie
 
         Bitmap roundBitmap = getCroppedBitmap(bitmap, getWidth());
         canvas.drawBitmap(roundBitmap, 0, 0, null);
-
     }
 
     public static Bitmap getCroppedBitmap(Bitmap bmp, int radius) {

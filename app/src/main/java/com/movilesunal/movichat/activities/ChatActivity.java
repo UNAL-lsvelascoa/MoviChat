@@ -134,7 +134,8 @@ public class ChatActivity extends AppCompatActivity {
                             @Override
                             public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
                                 Snackbar.make(getCurrentFocus(),
-                                        R.string.cannot_connect_api_google, Snackbar.LENGTH_LONG).show();
+                                        R.string.cannot_connect_api_google,
+                                        Snackbar.LENGTH_LONG).show();
                             }
                         })
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
