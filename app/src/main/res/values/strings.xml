@@ -13,5 +13,7 @@
 
 
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
+    <string name="firebase_auth_fail">La autenticación con Firebase ha fallado. Por favor inténtalo de nuevo más tarde.</string>
+    <string name="google_auth_fail">No te hemos podido autenticar en este momento. Danos un momento por fa, y vuelve a intentar.</string>
 
 </resources>

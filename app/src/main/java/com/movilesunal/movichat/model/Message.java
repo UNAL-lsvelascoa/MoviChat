@@ -6,16 +6,25 @@ package com.movilesunal.movichat.model;
 
 public class Message {
 
-    private String user;
+    private String name;
+    private String uid;
     private String text;
     private String hour;
 
-    public String getUser() {
-        return user;
+    public String getName() {
+        return name;
     }
 
-    public void setUser(String user) {
-        this.user = user;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 
     public String getText() {

@@ -3,6 +3,7 @@ package com.movilesunal.movichat.activities;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AlertDialog;
@@ -13,10 +14,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crash.FirebaseCrash;
@@ -25,6 +33,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.movilesunal.movichat.R;
 import com.movilesunal.movichat.model.Message;
 
@@ -39,6 +49,8 @@ public class ChatActivity extends AppCompatActivity {
     private FirebaseUser user;
     private LinkedList<String> sending = new LinkedList<>();
     private AtomicInteger msgId = new AtomicInteger();
+    private StorageReference reference;
+    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +74,7 @@ public class ChatActivity extends AppCompatActivity {
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Message message = dataSnapshot.getValue(Message.class);
                 if (!sending.contains(dataSnapshot.getKey())) {
-                    if (message.getUser().equals(user.getDisplayName())) {
+                    if (message.getUid().equals(user.getUid())) {
                         addMessageToScreen(message, true);
                     } else {
                         addMessageToScreen(message, false);
@@ -102,7 +114,8 @@ public class ChatActivity extends AppCompatActivity {
                     Calendar calendar = Calendar.getInstance();
 
                     Message message = new Message();
-                    message.setUser(user.getDisplayName());
+                    message.setName(user.getDisplayName());
+                    message.setUid(user.getUid());
                     message.setText(text);
                     message.setHour(calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE));
                     addMessageToScreen(message, true);
@@ -110,6 +123,22 @@ public class ChatActivity extends AppCompatActivity {
                 }
             }
         });
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        mGoogleApiClient = new GoogleApiClient.Builder(ChatActivity.this)
+                .enableAutoManage(ChatActivity.this,
+                        new GoogleApiClient.OnConnectionFailedListener() {
+                            @Override
+                            public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+                                Snackbar.make(getCurrentFocus(),
+                                        R.string.cannot_connect_api_google, Snackbar.LENGTH_LONG).show();
+                            }
+                        })
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
 
         FirebaseMessaging.getInstance().subscribeToTopic("MoviChat");
     }
@@ -124,9 +153,15 @@ public class ChatActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_logout:
-                FirebaseAuth.getInstance().signOut();
-                finish();
-                startActivity(new Intent(this, LoginActivity.class));
+                if (mGoogleApiClient.isConnected()) {
+                    FirebaseAuth.getInstance().signOut();
+
+                    Auth.GoogleSignInApi.signOut(mGoogleApiClient);
+                    finish();
+                    startActivity(new Intent(this, LoginActivity.class));
+                } else {
+                    Snackbar.make(getCurrentFocus(), R.string.cannot_connect_api_google, Snackbar.LENGTH_LONG).show();
+                }
                 break;
             case R.id.action_report:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -163,11 +198,12 @@ public class ChatActivity extends AppCompatActivity {
             view = getLayoutInflater().inflate(R.layout.own_message, lytMessages, false);
         } else {
             view = getLayoutInflater().inflate(R.layout.other_message, lytMessages, false);
+            downloadImage(((ImageView) view.findViewById(R.id.imgUser)), "Users/" + message.getUid());
         }
         TextView txtUser = (TextView) view.findViewById(R.id.txtUser);
         TextView txtText = (TextView) view.findViewById(R.id.txtText);
         TextView txtHour = (TextView) view.findViewById(R.id.txtHour);
-        txtUser.setText(message.getUser());
+        txtUser.setText(message.getName());
         txtText.setText(message.getText());
         txtHour.setText(message.getHour());
 
@@ -184,11 +220,15 @@ public class ChatActivity extends AppCompatActivity {
         String key = FirebaseDatabase.getInstance().getReference().child("Room").push().getKey();
         sending.add(key);
         FirebaseDatabase.getInstance().getReference().child("Room").child(key).setValue(message);
-        /*String SENDERID = FirebaseInstanceId.getInstance().getToken();
-        RemoteMessage rm = new RemoteMessage.Builder("/topics/MoviChat")
-                .setMessageId("0:125676897843176471")
-                .addData("message", "Hello World")
-                .build();
-        FirebaseMessaging.getInstance().send(rm);*/
+    }
+
+    public void downloadImage(ImageView img, String path) {
+        reference = FirebaseStorage.getInstance().getReference();
+        StorageReference ref = reference;
+        ref = ref.child(path);
+        Glide.with(this)
+                .using(new FirebaseImageLoader())
+                .load(ref)
+                .into(img);
     }
 }

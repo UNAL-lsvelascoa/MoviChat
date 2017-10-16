@@ -1,15 +1,12 @@
 package com.movilesunal.movichat.activities;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.google.android.gms.auth.api.Auth;
@@ -25,6 +22,9 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.movilesunal.movichat.common.DownloadFile;
 import com.movilesunal.movichat.R;
 
 public class LoginActivity extends AppCompatActivity {
@@ -32,6 +32,7 @@ public class LoginActivity extends AppCompatActivity {
     private static final int RC_SIGN_IN = 9823;
     private GoogleApiClient mGoogleApiClient;
     private FirebaseAuth mAuth;
+    private StorageReference reference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,8 +99,7 @@ public class LoginActivity extends AppCompatActivity {
                     GoogleSignInAccount account = result.getSignInAccount();
                     firebaseAuthWithGoogle(account);
                 } else {
-                    Snackbar.make(getCurrentFocus(), "No te hemos podido autenticar en este momento." +
-                            " Danos un momento por fa, y vuelve a intentar.", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(getCurrentFocus(), R.string.google_auth_fail, Snackbar.LENGTH_LONG).show();
                 }
                 break;
         }
@@ -117,15 +117,20 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            FirebaseUser user = mAuth.getCurrentUser();
+                            saveImage("Users/" + FirebaseAuth.getInstance().getCurrentUser().getUid());
                             finish();
                             startActivity(new Intent(LoginActivity.this, ChatActivity.class));
                         } else {
-                            // If sign in fails, display a message to the user.
+                            Snackbar.make(getCurrentFocus(), R.string.firebase_auth_fail, Snackbar.LENGTH_LONG).show();
                         }
                     }
                 });
     }
 
+    private void saveImage(String path) {
+        StorageReference ref = FirebaseStorage.getInstance().getReference();
+        ref = ref.child(path);
+        new DownloadFile(this, ref)
+                .execute(FirebaseAuth.getInstance().getCurrentUser().getPhotoUrl().toString());
+    }
 }
